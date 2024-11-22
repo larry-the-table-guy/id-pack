@@ -4,8 +4,8 @@ pub static ENCODE_TABLE: [u8; 256] = {
     let mut i = 0;
     while i < t.len() {
         t[i] = match i as u8 {
-            b'0'..=b'9' => i as u8 - b'0',
-            b'a'..=b'z' => 10 + (i as u8 - b'a'),
+            b'0'..=b'9' => i as u8 - b'0' + 1,
+            b'a'..=b'z' => 10 + (i as u8 - b'a') + 1,
             _ => ILLEGAL_ENCODE_VAL, // shouldn't ever be read
         };
         i += 1;
@@ -18,8 +18,8 @@ pub static DECODE_TABLE: [u8; 256] = {
     let mut i = 0;
     while i < t.len() {
         t[i] = match i as u8 {
-            0..10 => i as u8 + b'0',
-            10..36 => i as u8 - 10 + b'a',
+            1..11 => i as u8 - 1 + b'0',
+            11..37 => i as u8 - 1 - 10 + b'a',
             _ => 0,
         };
         i += 1;
@@ -71,6 +71,8 @@ mod tests {
             let mut out = [0u8; 20];
             unpack(&pack(case.as_bytes()), &mut out);
             assert_eq!(case.as_bytes(), &out[..case.len()], "case: {case}");
+            let trailing = &out[case.len()..];
+            assert!(trailing.iter().all(|b| *b == 0), "trailing bytes should be zeros, but were {trailing:?}", );
         }
     }
 }
